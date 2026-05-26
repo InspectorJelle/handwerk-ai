@@ -67,7 +67,7 @@ export async function getUserProfile(): Promise<UserProfile | null> {
 
   const { data, error } = await supabase
     .from("users")
-    .select("id, company_name, logo_url, tax_id")
+    .select("id, company_name, owner_name, company_address, company_phone, logo_url, tax_id")
     .eq("id", userId)
     .single();
 
@@ -77,7 +77,10 @@ export async function getUserProfile(): Promise<UserProfile | null> {
 
 export async function updateUserProfile(input: {
   company_name?: string;
-  tax_id?: string;
+  owner_name?: string;
+  company_address?: string;
+  company_phone?: string | null;
+  tax_id?: string | null;
   logo_url?: string | null;
 }): Promise<UserProfile | null> {
   const supabase = createAdminClient();
@@ -90,7 +93,7 @@ export async function updateUserProfile(input: {
     .from("users")
     .update(input)
     .eq("id", userId)
-    .select("id, company_name, logo_url, tax_id")
+    .select("id, company_name, owner_name, company_address, company_phone, logo_url, tax_id")
     .single();
 
   if (error || !data) return null;

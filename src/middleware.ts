@@ -9,6 +9,14 @@ const PUBLIC_PATHS = [
   "/auth/reset-password",
 ];
 
+const ONBOARDING_SKIP = ["/onboarding", "/api/", "/auth/"];
+
+function needsOnboardingCheck(pathname: string): boolean {
+  if (ONBOARDING_SKIP.some((p) => pathname.startsWith(p))) return false;
+  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) return false;
+  return true;
+}
+
 export async function middleware(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -50,10 +58,41 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (user && (pathname === "/login" || pathname === "/register" || pathname === "/forgot-password")) {
-    const dash = request.nextUrl.clone();
-    dash.pathname = "/dashboard";
-    return NextResponse.redirect(dash);
+  if (user) {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("company_name, owner_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const complete =
+      Boolean(profile?.company_name?.trim()) &&
+      Boolean(profile?.owner_name?.trim());
+
+    if (pathname === "/onboarding" && complete) {
+      const dash = request.nextUrl.clone();
+      dash.pathname = "/dashboard";
+      return NextResponse.redirect(dash);
+    }
+
+    if (
+      needsOnboardingCheck(pathname) &&
+      !complete
+    ) {
+      const onboarding = request.nextUrl.clone();
+      onboarding.pathname = "/onboarding";
+      return NextResponse.redirect(onboarding);
+    }
+
+    if (
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname === "/forgot-password"
+    ) {
+      const target = request.nextUrl.clone();
+      target.pathname = complete ? "/dashboard" : "/onboarding";
+      return NextResponse.redirect(target);
+    }
   }
 
   return response;

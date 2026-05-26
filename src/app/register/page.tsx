@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,12 +25,9 @@ export default function RegisterPage() {
       return;
     }
 
-    const { data, error: authError } = await supabase.auth.signUp({
+    const { error: authError } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { company_name: companyName },
-      },
     });
 
     if (authError) {
@@ -40,7 +36,9 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/dashboard");
+    await fetch("/api/profile/setup", { method: "POST" });
+
+    router.push("/onboarding");
     router.refresh();
   };
 
@@ -49,21 +47,11 @@ export default function RegisterPage() {
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold">{APP_NAME}</h1>
         <p className="mt-2 text-sm text-[var(--muted)]">
-          Konto für deinen Betrieb erstellen
+          Konto erstellen – Firmendaten folgen im nächsten Schritt
         </p>
       </div>
 
       <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
-        <label className="field">
-          <span>Firmenname</span>
-          <input
-            type="text"
-            required
-            placeholder="Muster Handwerk GmbH"
-            value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
-          />
-        </label>
         <label className="field">
           <span>E-Mail</span>
           <input
@@ -89,7 +77,7 @@ export default function RegisterPage() {
         {error && <p className="text-sm text-red-600">{error}</p>}
 
         <button type="submit" className="btn-primary" disabled={loading}>
-          {loading ? "Wird erstellt…" : "Registrieren"}
+          {loading ? "Wird erstellt…" : "Weiter zur Firmeneinrichtung"}
         </button>
       </form>
 

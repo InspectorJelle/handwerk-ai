@@ -5,7 +5,10 @@ import { getUserProfile, updateUserProfile } from "@/lib/quotes";
 
 const patchSchema = z.object({
   company_name: z.string().min(1).optional(),
-  tax_id: z.string().optional(),
+  owner_name: z.string().min(1).optional(),
+  company_address: z.string().optional(),
+  company_phone: z.string().optional().nullable(),
+  tax_id: z.string().optional().nullable(),
 });
 
 export async function GET() {

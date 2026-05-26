@@ -32,7 +32,7 @@ export async function createCustomer(
     .single();
 
   if (error || !data) {
-    console.error("createCustomer:", error?.message);
+    console.error("createCustomer:", error?.message, error?.code, error?.details);
     return null;
   }
 

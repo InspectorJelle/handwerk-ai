@@ -18,6 +18,9 @@ export type CustomerInput = {
 export type UserProfile = {
   id: string;
   company_name: string;
+  owner_name: string;
+  company_address: string;
+  company_phone: string | null;
   logo_url: string | null;
   tax_id: string | null;
 };

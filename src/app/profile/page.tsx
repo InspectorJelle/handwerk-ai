@@ -1,10 +1,18 @@
 import { MobileShell } from "@/components/layout/MobileShell";
 import { ProfileSettings } from "@/components/profile/ProfileSettings";
-import { getAuthUserEmail } from "@/lib/auth";
+import { getAuthUserEmail, getCurrentUserId } from "@/lib/auth";
 import { getUserProfile, isQuotesDataAvailable } from "@/lib/quotes";
+import { ensureUserProfile } from "@/lib/users";
 
 export default async function ProfilePage() {
-  const profile = await getUserProfile();
+  const userId = await getCurrentUserId();
+  let profile = await getUserProfile();
+
+  if (userId && !profile) {
+    await ensureUserProfile(userId);
+    profile = await getUserProfile();
+  }
+
   const email = await getAuthUserEmail();
   const supabaseReady = isQuotesDataAvailable();
 
