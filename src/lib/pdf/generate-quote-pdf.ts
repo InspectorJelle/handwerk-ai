@@ -45,9 +45,10 @@ function drawRight(
   font: PDFFont,
   size: number,
   color = COLOR.text,
+  rightEdge = RIGHT,
 ) {
   const w = font.widthOfTextAtSize(text, size);
-  page.drawText(text, { x: RIGHT - w, y, size, font, color });
+  page.drawText(text, { x: rightEdge - w, y, size, font, color });
 }
 
 function drawSectionLabel(
@@ -183,13 +184,14 @@ export async function generateQuotePdf(
 
   y -= 58;
 
-  // --- Positionen ---
+  // --- Positionen (Spalten mit festen rechten Kanten, damit EP/Summe nicht überlappen) ---
   drawSectionLabel(page, "Positionen", y, fontBold);
   y -= 14;
 
-  const colQty = RIGHT - 200;
-  const colEp = RIGHT - 120;
-  const colSum = RIGHT;
+  const COL_SUM = RIGHT;
+  const COL_EP = RIGHT - 82;
+  const COL_QTY = RIGHT - 168;
+  const DESC_MAX_CHARS = 42;
 
   page.drawText("Beschreibung", {
     x: MARGIN,
@@ -198,9 +200,9 @@ export async function generateQuotePdf(
     font: fontBold,
     color: COLOR.muted,
   });
-  page.drawText("Menge", { x: colQty, y, size: 8, font: fontBold, color: COLOR.muted });
-  drawRight(page, "EP", y, fontBold, 8, COLOR.muted);
-  drawRight(page, "Summe", y, fontBold, 8, COLOR.muted);
+  page.drawText("Menge", { x: COL_QTY, y, size: 8, font: fontBold, color: COLOR.muted });
+  drawRight(page, "EP", y, fontBold, 8, COLOR.muted, COL_EP);
+  drawRight(page, "Summe", y, fontBold, 8, COLOR.muted, COL_SUM);
   y -= 10;
 
   page.drawLine({
@@ -214,20 +216,20 @@ export async function generateQuotePdf(
   for (const item of data.items) {
     const lineTotal = Math.round(item.quantity * item.unitPriceCents);
     const desc =
-      item.description.length > 48
-        ? `${item.description.slice(0, 45)}…`
+      item.description.length > DESC_MAX_CHARS
+        ? `${item.description.slice(0, DESC_MAX_CHARS - 1)}…`
         : item.description;
 
     page.drawText(desc, { x: MARGIN, y, size: 10, font, color: COLOR.text });
     page.drawText(`${item.quantity} ${item.unit}`, {
-      x: colQty,
+      x: COL_QTY,
       y,
       size: 10,
       font,
       color: COLOR.text,
     });
-    drawRight(page, fmt(item.unitPriceCents), y, font, 10);
-    drawRight(page, fmt(lineTotal), y, fontBold, 10);
+    drawRight(page, fmt(item.unitPriceCents), y, font, 10, COLOR.text, COL_EP);
+    drawRight(page, fmt(lineTotal), y, fontBold, 10, COLOR.text, COL_SUM);
     y -= 18;
 
     if (y < 120) break;
