@@ -1,22 +1,39 @@
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import { MobileShell } from "@/components/layout/MobileShell";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
-import { getCurrentUserId } from "@/lib/auth";
-import { getUserProfile } from "@/lib/quotes";
-import { ensureUserProfile, isProfileComplete } from "@/lib/users";
+import { createClient } from "@/lib/supabase/server";
+import { ensureUserProfile, getSessionUserProfile } from "@/lib/users";
 
 export default async function OnboardingPage() {
-  const userId = await getCurrentUserId();
-  if (!userId) {
-    redirect("/login");
+  const supabase = await createClient();
+
+  if (!supabase) {
+    return (
+      <MobileShell title="Einrichtung" subtitle="Schritt 1 von 1" hideNav>
+        <OnboardingWizard initialProfile={null} />
+      </MobileShell>
+    );
   }
 
-  await ensureUserProfile(userId);
-  const profile = await getUserProfile();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  if (isProfileComplete(profile)) {
-    redirect("/dashboard");
+  if (!user) {
+    return (
+      <MobileShell title="Einrichtung" hideNav>
+        <p className="mt-6 text-center text-sm text-[var(--muted)]">
+          Bitte melde dich an, um deinen Betrieb einzurichten.
+        </p>
+        <Link href="/login" className="btn-primary mt-4 block text-center">
+          Zur Anmeldung
+        </Link>
+      </MobileShell>
+    );
   }
+
+  await ensureUserProfile(user.id);
+  const profile = await getSessionUserProfile();
 
   return (
     <MobileShell title="Einrichtung" subtitle="Schritt 1 von 1" hideNav>

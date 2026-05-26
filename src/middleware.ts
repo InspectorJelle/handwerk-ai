@@ -11,6 +11,26 @@ const PUBLIC_PATHS = [
 
 const ONBOARDING_SKIP = ["/onboarding", "/api/", "/auth/"];
 
+async function isProfileCompleteForUser(
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string,
+): Promise<boolean> {
+  const { data: profile, error } = await supabase
+    .from("users")
+    .select("company_name, owner_name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!error && profile) {
+    return (
+      Boolean(profile.company_name?.trim()) &&
+      Boolean(profile.owner_name?.trim())
+    );
+  }
+
+  return false;
+}
+
 function needsOnboardingCheck(pathname: string): boolean {
   if (ONBOARDING_SKIP.some((p) => pathname.startsWith(p))) return false;
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) return false;
@@ -59,15 +79,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user) {
-    const { data: profile } = await supabase
-      .from("users")
-      .select("company_name, owner_name")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const complete =
-      Boolean(profile?.company_name?.trim()) &&
-      Boolean(profile?.owner_name?.trim());
+    const complete = await isProfileCompleteForUser(supabase, user.id);
 
     if (pathname === "/onboarding" && complete) {
       const dash = request.nextUrl.clone();
