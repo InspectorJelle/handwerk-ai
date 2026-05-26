@@ -79,7 +79,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user) {
-    const complete = await isProfileCompleteForUser(supabase, user.id);
+    const completeFromMetadata = user.user_metadata?.profile_complete === true;
+    const complete =
+      completeFromMetadata ||
+      (await isProfileCompleteForUser(supabase, user.id));
 
     if (pathname === "/onboarding" && complete) {
       const dash = request.nextUrl.clone();

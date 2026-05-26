@@ -1,11 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import {
   CompanyForm,
   type CompanyFormValues,
 } from "@/components/profile/CompanyForm";
 import { APP_NAME } from "@/lib/brand";
+import { createClient } from "@/lib/supabase/client";
 import type { UserProfile } from "@/lib/types";
 
 type OnboardingWizardProps = {
@@ -13,7 +14,21 @@ type OnboardingWizardProps = {
 };
 
 export function OnboardingWizard({ initialProfile }: OnboardingWizardProps) {
-  const router = useRouter();
+  useEffect(() => {
+    void (async () => {
+      const res = await fetch("/api/profile/sync-complete", { method: "POST" });
+      if (!res.ok) return;
+
+      const data = (await res.json()) as { complete?: boolean };
+      if (!data.complete) return;
+
+      const supabase = createClient();
+      if (supabase) {
+        await supabase.auth.refreshSession();
+      }
+      window.location.href = "/dashboard";
+    })();
+  }, []);
 
   const save = async (values: CompanyFormValues) => {
     const res = await fetch("/api/profile", {
@@ -35,8 +50,12 @@ export function OnboardingWizard({ initialProfile }: OnboardingWizardProps) {
       );
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    const supabase = createClient();
+    if (supabase) {
+      await supabase.auth.refreshSession();
+    }
+
+    window.location.href = "/dashboard";
   };
 
   return (

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { getAuthUserEmail } from "@/lib/auth";
+import { getAuthUserEmail, getCurrentUserId } from "@/lib/auth";
 import { getUserProfile, updateUserProfile } from "@/lib/quotes";
+import { isProfileComplete, syncProfileCompleteMetadata } from "@/lib/users";
 
 const patchSchema = z.object({
   company_name: z.string().min(1).optional(),
@@ -34,6 +35,13 @@ export async function PATCH(request: Request) {
     const profile = await updateUserProfile(parsed.data);
     if (!profile) {
       return NextResponse.json({ error: "Speichern fehlgeschlagen" }, { status: 500 });
+    }
+
+    if (isProfileComplete(profile)) {
+      const userId = await getCurrentUserId();
+      if (userId) {
+        await syncProfileCompleteMetadata(userId, true);
+      }
     }
 
     return NextResponse.json({ profile });

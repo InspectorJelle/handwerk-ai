@@ -97,3 +97,28 @@ export async function ensureCurrentUserProfile(
   const ok = await ensureUserProfile(userId, companyName);
   return ok ? userId : null;
 }
+
+export async function syncProfileCompleteMetadata(
+  userId: string,
+  complete: boolean,
+): Promise<void> {
+  const admin = createAdminClient();
+  if (!admin) return;
+
+  const { data, error: fetchError } = await admin.auth.admin.getUserById(userId);
+  if (fetchError || !data.user) {
+    console.error("syncProfileCompleteMetadata getUser:", fetchError?.message);
+    return;
+  }
+
+  const { error } = await admin.auth.admin.updateUserById(userId, {
+    user_metadata: {
+      ...data.user.user_metadata,
+      profile_complete: complete,
+    },
+  });
+
+  if (error) {
+    console.error("syncProfileCompleteMetadata update:", error.message);
+  }
+}
