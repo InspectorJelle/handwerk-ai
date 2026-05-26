@@ -1,3 +1,4 @@
+import { normalizeQuoteItems } from "@/lib/quote-items";
 import type { QuoteLineItem } from "@/lib/types";
 
 const SYSTEM_PROMPT = `Du bearbeitest eine Handwerker-Angebotsliste in Deutschland.
@@ -10,13 +11,16 @@ Antworte NUR mit validem JSON:
   "items": [
     {
       "description": "string",
-      "quantity": number,
-      "unit": "Stk|m²|h|lfm|pauschal",
-      "unitPriceCents": number,
-      "laborHours": number (optional)
+      "quantity": number | null,
+      "unit": "Stk|m²|h|lfm|pauschal" | null,
+      "unitPriceCents": number | null,
+      "laborHours": number | null (optional)
     }
   ]
-}`;
+}
+
+WICHTIG: Erfunde keine Preise, Mengen oder Einheiten. Wenn etwas nicht genannt wird, null setzen.
+Bestehende Werte beibehalten, sofern die Anweisung sie nicht ändert.`;
 
 export async function applyVoiceEditToItems(
   currentItems: QuoteLineItem[],
@@ -64,5 +68,5 @@ export async function applyVoiceEditToItems(
   }
 
   const parsed = JSON.parse(jsonMatch[0]) as { items: QuoteLineItem[] };
-  return parsed.items;
+  return normalizeQuoteItems(parsed.items);
 }

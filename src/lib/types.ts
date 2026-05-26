@@ -2,9 +2,9 @@ export type QuoteStatus = "draft" | "sent";
 
 export type QuoteLineItem = {
   description: string;
-  quantity: number;
-  unit: string;
-  unitPriceCents: number;
+  quantity: number | null;
+  unit: string | null;
+  unitPriceCents: number | null;
   laborHours?: number;
 };
 

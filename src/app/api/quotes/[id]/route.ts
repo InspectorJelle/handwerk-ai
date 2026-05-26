@@ -7,18 +7,11 @@ import {
   updateQuoteItems,
   updateQuoteStatus,
 } from "@/lib/quotes";
-
-const itemSchema = z.object({
-  description: z.string().min(1),
-  quantity: z.number().positive(),
-  unit: z.string().min(1),
-  unitPriceCents: z.number().int().nonnegative(),
-  laborHours: z.number().optional(),
-});
+import { quoteLineItemSchema } from "@/lib/quote-items";
 
 const patchSchema = z
   .object({
-    items: z.array(itemSchema).optional(),
+    items: z.array(quoteLineItemSchema).optional(),
     status: z.enum(["draft", "sent"]).optional(),
   })
   .refine((data) => data.items != null || data.status != null, {

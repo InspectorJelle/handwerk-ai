@@ -1,3 +1,4 @@
+import { normalizeQuoteItems } from "@/lib/quote-items";
 import { MOCK_QUOTE_ITEMS } from "@/lib/mock-data";
 import type { QuoteLineItem } from "@/lib/types";
 
@@ -11,14 +12,19 @@ Antworte NUR mit validem JSON ohne Markdown, in diesem Format:
   "items": [
     {
       "description": "string",
-      "quantity": number,
-      "unit": "Stk|m²|h|lfm|pauschal",
-      "unitPriceCents": number,
-      "laborHours": number (optional)
+      "quantity": number | null,
+      "unit": "Stk|m²|h|lfm|pauschal" | null,
+      "unitPriceCents": number | null,
+      "laborHours": number | null (optional)
     }
   ]
 }
-Verwende realistische Marktpreise in Cent (z.B. 4500 = 45,00 EUR).
+
+WICHTIG – nichts erfinden:
+- Wenn Menge, Einheit oder Preis NICHT klar im Transkript genannt sind: setze quantity, unit oder unitPriceCents auf null.
+- Erfunde NIEMALS Preise, Mengen oder Einheiten.
+- Übernimm Preise nur, wenn sie explizit genannt sind (z. B. "45 Euro pro Quadratmeter", "65 Euro die Stunde").
+- unitPriceCents immer in Cent (4500 = 45,00 EUR), nur wenn Preis genannt wurde.
 Alle Texte auf Deutsch.`;
 
 /**
@@ -69,5 +75,5 @@ export async function extractQuoteItems(
   }
 
   const parsed = JSON.parse(jsonMatch[0]) as { items: QuoteLineItem[] };
-  return parsed.items;
+  return normalizeQuoteItems(parsed.items);
 }

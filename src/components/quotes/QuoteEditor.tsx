@@ -7,6 +7,7 @@ import { EditableQuoteItems } from "@/components/quotes/EditableQuoteItems";
 import { PdfViewerModal } from "@/components/quotes/PdfViewerModal";
 import { VoiceHoldButton } from "@/components/quotes/VoiceHoldButton";
 import { formatEuro } from "@/lib/format";
+import { calculateTotalCents, hasIncompleteItems } from "@/lib/quote-items";
 import type { QuoteLineItem, QuoteWithCustomer } from "@/lib/types";
 
 type QuoteEditorProps = {
@@ -53,12 +54,10 @@ export function QuoteEditor({ initialQuote }: QuoteEditorProps) {
 
   const handleItemsChange = (next: QuoteLineItem[]) => {
     setItems(next);
-    const sum = next.reduce(
-      (s, i) => s + Math.round(i.quantity * i.unitPriceCents),
-      0,
-    );
-    setTotalCents(sum);
+    setTotalCents(calculateTotalCents(next));
   };
+
+  const incomplete = hasIncompleteItems(items);
 
   const handleVoiceEdit = async (audio: Blob) => {
     setVoiceBusy(true);
@@ -113,7 +112,20 @@ export function QuoteEditor({ initialQuote }: QuoteEditorProps) {
         <p className="mt-2 text-xl font-bold text-[var(--primary)]">
           {formatEuro(totalCents)}
         </p>
+        {incomplete && (
+          <p className="mt-1 text-xs text-amber-800">
+            Summe nur aus vollständigen Positionen — gelb markierte Felder fehlen
+            noch.
+          </p>
+        )}
       </div>
+
+      {incomplete && (
+        <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          Einige Positionen haben keine Menge, Einheit oder Preis. Bitte ergänzen,
+          bevor du das Angebot verschickst.
+        </p>
+      )}
 
       <div className="mt-4 flex gap-2">
         <button

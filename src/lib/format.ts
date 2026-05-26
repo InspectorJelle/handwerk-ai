@@ -5,6 +5,11 @@ export function formatEuro(cents: number): string {
   }).format(cents / 100);
 }
 
+export function formatEuroOptional(cents: number | null | undefined): string {
+  if (cents == null) return "—";
+  return formatEuro(cents);
+}
+
 export function formatDateDE(iso: string): string {
   return new Intl.DateTimeFormat("de-DE", {
     day: "2-digit",

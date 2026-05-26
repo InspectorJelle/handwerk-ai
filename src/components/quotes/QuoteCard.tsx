@@ -8,6 +8,7 @@ import { DownloadPdfButton } from "@/components/quotes/DownloadPdfButton";
 import { PdfViewerModal } from "@/components/quotes/PdfViewerModal";
 import { SendQuoteSheet } from "@/components/quotes/SendQuoteSheet";
 import { formatDateDE, formatEuro } from "@/lib/format";
+import { hasIncompleteItems } from "@/lib/quote-items";
 import type { QuoteWithCustomer } from "@/lib/types";
 
 type QuoteCardProps = {
@@ -39,6 +40,8 @@ export function QuoteCard({ quote, companyName }: QuoteCardProps) {
   const [showPdf, setShowPdf] = useState(false);
   const [showSend, setShowSend] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const incomplete = hasIncompleteItems(quote.items);
 
   const handleDelete = async () => {
     const ok = window.confirm(
@@ -77,6 +80,11 @@ export function QuoteCard({ quote, companyName }: QuoteCardProps) {
             <p className="truncate text-sm text-[var(--muted)]">
               {quote.quote_number}
             </p>
+            {incomplete && (
+              <p className="mt-1 text-xs font-medium text-amber-800">
+                Positionen unvollständig — bitte bearbeiten
+              </p>
+            )}
           </div>
 
           <div className="flex shrink-0 items-center gap-0.5">

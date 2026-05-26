@@ -7,6 +7,8 @@ import { CustomerStep } from "@/components/quotes/CustomerStep";
 import { ProcessingStep } from "@/components/quotes/ProcessingStep";
 import { RecordStep } from "@/components/quotes/RecordStep";
 import type { CustomerInput } from "@/lib/types";
+import { hasIncompleteItems } from "@/lib/quote-items";
+import type { QuoteLineItem } from "@/lib/types";
 
 type WizardStep = 1 | 2 | 3;
 
@@ -98,7 +100,10 @@ export default function NewQuotePage() {
           );
         }
 
-        const { quoteId } = (await processRes.json()) as { quoteId: string };
+        const { quoteId, items } = (await processRes.json()) as {
+          quoteId: string;
+          items: QuoteLineItem[];
+        };
 
         if (quoteId && !quoteId.startsWith("dev-mock")) {
           await fetch("/api/generate-pdf", {
@@ -108,7 +113,11 @@ export default function NewQuotePage() {
           });
         }
 
-        router.push("/dashboard");
+        if (quoteId && hasIncompleteItems(items)) {
+          router.push(`/quotes/${quoteId}/edit`);
+        } else {
+          router.push("/dashboard");
+        }
         router.refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : "Unbekannter Fehler");

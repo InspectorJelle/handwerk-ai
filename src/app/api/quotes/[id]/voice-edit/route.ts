@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { applyVoiceEditToItems } from "@/lib/ai/apply-voice-edit";
 import { transcribeAudioBlob } from "@/lib/transcribe-audio";
+import { quoteLineItemSchema } from "@/lib/quote-items";
 import {
   calculateTotalCents,
   getQuoteWithCustomer,
@@ -12,15 +13,7 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 const jsonSchema = z.object({
   transcript: z.string().min(1),
-  items: z.array(
-    z.object({
-      description: z.string(),
-      quantity: z.number(),
-      unit: z.string(),
-      unitPriceCents: z.number(),
-      laborHours: z.number().optional(),
-    }),
-  ),
+  items: z.array(quoteLineItemSchema),
 });
 
 export async function POST(request: Request, context: RouteContext) {

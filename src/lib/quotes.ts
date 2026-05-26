@@ -1,4 +1,5 @@
 import { getCurrentUserId } from "@/lib/auth";
+import { calculateTotalCents } from "@/lib/quote-items";
 import { createAdminClient, isSupabaseAdminConfigured } from "@/lib/supabase/admin";
 import type { QuoteLineItem, QuoteStatus, QuoteWithCustomer, UserProfile } from "@/lib/types";
 
@@ -248,9 +249,4 @@ export async function updateQuoteStatus(
   return true;
 }
 
-export function calculateTotalCents(items: QuoteLineItem[]): number {
-  return items.reduce(
-    (sum, item) => sum + Math.round(item.quantity * item.unitPriceCents),
-    0,
-  );
-}
+export { calculateTotalCents } from "@/lib/quote-items";

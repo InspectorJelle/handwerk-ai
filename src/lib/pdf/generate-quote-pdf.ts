@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { APP_NAME } from "@/lib/brand";
 import type { QuoteLineItem } from "@/lib/types";
+import { hasIncompleteItems, lineTotalCents } from "@/lib/quote-items";
 
 export type PdfQuoteData = {
   companyName: string;
@@ -214,25 +215,57 @@ export async function generateQuotePdf(
   y -= 14;
 
   for (const item of data.items) {
-    const lineTotal = Math.round(item.quantity * item.unitPriceCents);
+    const lineTotal = lineTotalCents(item);
     const desc =
       item.description.length > DESC_MAX_CHARS
         ? `${item.description.slice(0, DESC_MAX_CHARS - 1)}…`
         : item.description;
 
+    const qtyLabel =
+      item.quantity != null && item.unit
+        ? `${item.quantity} ${item.unit}`
+        : item.quantity != null
+          ? String(item.quantity)
+          : item.unit ?? "—";
+
     page.drawText(desc, { x: MARGIN, y, size: 10, font, color: COLOR.text });
-    page.drawText(`${item.quantity} ${item.unit}`, {
+    page.drawText(qtyLabel, {
       x: COL_QTY,
       y,
       size: 10,
       font,
       color: COLOR.text,
     });
-    drawRight(page, fmt(item.unitPriceCents), y, font, 10, COLOR.text, COL_EP);
-    drawRight(page, fmt(lineTotal), y, fontBold, 10, COLOR.text, COL_SUM);
+    drawRight(
+      page,
+      item.unitPriceCents != null ? fmt(item.unitPriceCents) : "offen",
+      y,
+      font,
+      10,
+      item.unitPriceCents != null ? COLOR.text : COLOR.muted,
+      COL_EP,
+    );
+    drawRight(
+      page,
+      lineTotal != null ? fmt(lineTotal) : "offen",
+      y,
+      fontBold,
+      10,
+      lineTotal != null ? COLOR.text : COLOR.muted,
+      COL_SUM,
+    );
     y -= 18;
 
     if (y < 120) break;
+  }
+
+  if (hasIncompleteItems(data.items)) {
+    y -= 4;
+    page.drawText(
+      "Hinweis: Positionen mit „offen“ sind noch ohne vollständige Angaben.",
+      { x: MARGIN, y, size: 8, font, color: COLOR.muted },
+    );
+    y -= 12;
   }
 
   y -= 8;

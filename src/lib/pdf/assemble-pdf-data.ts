@@ -1,5 +1,6 @@
 import type { QuoteLineItem } from "@/lib/types";
 import type { CustomerRecord } from "@/lib/customers";
+import { calculateTotalCents } from "@/lib/quote-items";
 
 export type QuotePdfInput = {
   companyName: string;
@@ -22,10 +23,7 @@ export function assemblePdfData(params: {
   quoteNumber: string;
   createdAt?: string;
 }): QuotePdfInput {
-  const totalCents = params.items.reduce(
-    (sum, item) => sum + Math.round(item.quantity * item.unitPriceCents),
-    0,
-  );
+  const totalCents = calculateTotalCents(params.items);
 
   return {
     companyName: params.companyName,
