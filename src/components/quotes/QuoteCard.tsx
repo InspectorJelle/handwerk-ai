@@ -6,8 +6,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { DownloadPdfButton } from "@/components/quotes/DownloadPdfButton";
 import { PdfViewerModal } from "@/components/quotes/PdfViewerModal";
+import { QuoteTotals } from "@/components/quotes/QuoteTotals";
 import { SendQuoteSheet } from "@/components/quotes/SendQuoteSheet";
-import { formatDateDE, formatEuro } from "@/lib/format";
+import { formatDateDE } from "@/lib/format";
 import { hasIncompleteItems } from "@/lib/quote-items";
 import type { QuoteWithCustomer } from "@/lib/types";
 
@@ -119,11 +120,9 @@ export function QuoteCard({ quote, companyName }: QuoteCardProps) {
           </div>
         </div>
 
-        <div className="mt-2 flex items-end justify-between">
-          <span className="text-lg font-bold text-[var(--primary)]">
-            {formatEuro(quote.total_cents)}
-          </span>
-          <span className="text-xs text-[var(--muted)]">
+        <div className="mt-2 flex items-end justify-between gap-3">
+          <QuoteTotals netCents={quote.total_cents} compact />
+          <span className="shrink-0 text-xs text-[var(--muted)]">
             {formatDateDE(quote.created_at)}
           </span>
         </div>

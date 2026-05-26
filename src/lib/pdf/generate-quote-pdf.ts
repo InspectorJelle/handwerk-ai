@@ -202,7 +202,7 @@ export async function generateQuotePdf(
     color: COLOR.muted,
   });
   page.drawText("Menge", { x: COL_QTY, y, size: 8, font: fontBold, color: COLOR.muted });
-  drawRight(page, "EP", y, fontBold, 8, COLOR.muted, COL_EP);
+  drawRight(page, "EP netto", y, fontBold, 8, COLOR.muted, COL_EP);
   drawRight(page, "Summe", y, fontBold, 8, COLOR.muted, COL_SUM);
   y -= 10;
 

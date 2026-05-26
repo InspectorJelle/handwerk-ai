@@ -5,8 +5,8 @@ import { ArrowLeft, Eye, Loader2, Save } from "lucide-react";
 import { useCallback, useState } from "react";
 import { EditableQuoteItems } from "@/components/quotes/EditableQuoteItems";
 import { PdfViewerModal } from "@/components/quotes/PdfViewerModal";
+import { QuoteTotals } from "@/components/quotes/QuoteTotals";
 import { VoiceHoldButton } from "@/components/quotes/VoiceHoldButton";
-import { formatEuro } from "@/lib/format";
 import { calculateTotalCents, hasIncompleteItems } from "@/lib/quote-items";
 import type { QuoteLineItem, QuoteWithCustomer } from "@/lib/types";
 
@@ -109,9 +109,9 @@ export function QuoteEditor({ initialQuote }: QuoteEditorProps) {
         <p className="text-sm text-[var(--muted)]">{initialQuote.quote_number}</p>
         <p className="font-semibold">{initialQuote.customer.name}</p>
         <p className="text-sm text-[var(--muted)]">{initialQuote.customer.address}</p>
-        <p className="mt-2 text-xl font-bold text-[var(--primary)]">
-          {formatEuro(totalCents)}
-        </p>
+        <div className="mt-3 border-t border-[var(--border)] pt-3">
+          <QuoteTotals netCents={totalCents} />
+        </div>
         {incomplete && (
           <p className="mt-1 text-xs text-amber-800">
             Summe nur aus vollständigen Positionen — gelb markierte Felder fehlen
@@ -161,6 +161,10 @@ export function QuoteEditor({ initialQuote }: QuoteEditorProps) {
       <h2 className="mb-2 mt-6 text-sm font-semibold uppercase tracking-wide text-[var(--muted)]">
         Positionen
       </h2>
+      <p className="mb-3 text-xs text-[var(--muted)]">
+        Felder direkt antippen und ändern, danach oben auf „Speichern“ tippen.
+        Einzelpreise sind netto.
+      </p>
       <EditableQuoteItems items={items} onChange={handleItemsChange} />
 
       <p className="mt-6 text-center text-xs text-[var(--muted)]">

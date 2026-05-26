@@ -13,58 +13,24 @@ type EditableQuoteItemsProps = {
   onChange: (items: QuoteLineItem[]) => void;
 };
 
-type EditField = "description" | "quantity" | "unit" | "unitPriceCents";
+function parseEuroInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (trimmed === "") return null;
+  const num = Number(trimmed.replace(",", "."));
+  if (Number.isNaN(num) || num < 0) return null;
+  return Math.round(num * 100);
+}
+
+function euroInputValue(cents: number | null): string {
+  if (cents == null) return "";
+  return (cents / 100).toFixed(2).replace(".", ",");
+}
 
 export function EditableQuoteItems({ items, onChange }: EditableQuoteItemsProps) {
   const updateItem = (index: number, patch: Partial<QuoteLineItem>) => {
-    const next = items.map((item, i) =>
-      i === index ? { ...item, ...patch } : item,
+    onChange(
+      items.map((item, i) => (i === index ? { ...item, ...patch } : item)),
     );
-    onChange(next);
-  };
-
-  const startEdit = (
-    index: number,
-    field: EditField,
-    current: string | number | null,
-  ) => {
-    const label =
-      field === "description"
-        ? "Beschreibung"
-        : field === "quantity"
-          ? "Menge (leer lassen = fehlt)"
-          : field === "unit"
-            ? "Einheit (z. B. m², Stk, h — leer = fehlt)"
-            : "Einzelpreis in Cent (leer = fehlt)";
-
-    const raw = window.prompt(label, current == null ? "" : String(current));
-    if (raw == null) return;
-
-    if (field === "description") {
-      if (raw.trim() === "") return;
-      updateItem(index, { description: raw.trim() });
-      return;
-    }
-
-    if (field === "unit") {
-      updateItem(index, { unit: raw.trim() === "" ? null : raw.trim() });
-      return;
-    }
-
-    if (raw.trim() === "") {
-      if (field === "quantity") updateItem(index, { quantity: null });
-      else updateItem(index, { unitPriceCents: null });
-      return;
-    }
-
-    const num = Number(raw.replace(",", "."));
-    if (Number.isNaN(num) || num < 0) return;
-
-    if (field === "quantity") {
-      updateItem(index, { quantity: num });
-    } else {
-      updateItem(index, { unitPriceCents: Math.round(num) });
-    }
   };
 
   if (items.length === 0) {
@@ -76,7 +42,7 @@ export function EditableQuoteItems({ items, onChange }: EditableQuoteItemsProps)
   }
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-3">
       {items.map((item, index) => {
         const complete = isItemComplete(item);
         const total = lineTotalCents(item);
@@ -92,63 +58,79 @@ export function EditableQuoteItems({ items, onChange }: EditableQuoteItemsProps)
             }`}
           >
             {!complete && (
-              <p className="mb-2 text-xs font-medium text-amber-800">
+              <p className="mb-3 text-xs font-medium text-amber-800">
                 Bitte ergänzen: {missing.join(", ")}
               </p>
             )}
 
-            <button
-              type="button"
-              className="w-full text-left font-medium text-[var(--foreground)]"
-              onClick={() => startEdit(index, "description", item.description)}
-            >
-              {item.description}
-            </button>
-
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-[var(--muted)]">
-              <button
-                type="button"
-                className={`rounded-lg px-2 py-1 font-mono tabular-nums ${
-                  item.quantity == null || !item.unit
-                    ? "bg-amber-100 text-amber-900"
-                    : "bg-zinc-100"
-                }`}
-                onClick={() => startEdit(index, "quantity", item.quantity)}
-              >
-                {item.quantity != null ? item.quantity : "Menge?"}
-              </button>
-              <button
-                type="button"
-                className={`rounded-lg px-2 py-1 ${
-                  item.unit ? "bg-zinc-100" : "bg-amber-100 text-amber-900"
-                }`}
-                onClick={() => startEdit(index, "unit", item.unit)}
-              >
-                {item.unit ?? "Einheit?"}
-              </button>
-              <span>×</span>
-              <button
-                type="button"
-                className={`rounded-lg px-2 py-1 font-mono tabular-nums ${
-                  item.unitPriceCents == null
-                    ? "bg-amber-100 font-semibold text-amber-900"
-                    : "bg-zinc-100"
-                }`}
-                onClick={() =>
-                  startEdit(index, "unitPriceCents", item.unitPriceCents)
+            <label className="field">
+              <span>Beschreibung</span>
+              <input
+                value={item.description}
+                onChange={(e) =>
+                  updateItem(index, { description: e.target.value })
                 }
-              >
-                {item.unitPriceCents == null
-                  ? "Preis fehlt"
-                  : formatEuro(item.unitPriceCents)}
-              </button>
-              <span className="ml-auto font-semibold text-[var(--primary)]">
-                {formatEuroOptional(total)}
-              </span>
+                placeholder="Leistung beschreiben"
+              />
+            </label>
+
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <label className="field">
+                <span>Menge</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min={0}
+                  step="any"
+                  value={item.quantity ?? ""}
+                  placeholder="z. B. 12"
+                  onChange={(e) => {
+                    const raw = e.target.value.trim();
+                    updateItem(index, {
+                      quantity:
+                        raw === "" ? null : Number(raw.replace(",", ".")),
+                    });
+                  }}
+                />
+              </label>
+
+              <label className="field">
+                <span>Einheit</span>
+                <input
+                  value={item.unit ?? ""}
+                  placeholder="m², Stk, h …"
+                  onChange={(e) =>
+                    updateItem(index, {
+                      unit: e.target.value.trim() === "" ? null : e.target.value,
+                    })
+                  }
+                />
+              </label>
             </div>
-            <p className="mt-1 text-[10px] text-[var(--muted)]">
-              Tippen zum Bearbeiten
-            </p>
+
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <label className="field">
+                <span>Einzelpreis netto (€)</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={euroInputValue(item.unitPriceCents)}
+                  placeholder="z. B. 45,00"
+                  onChange={(e) =>
+                    updateItem(index, {
+                      unitPriceCents: parseEuroInput(e.target.value),
+                    })
+                  }
+                />
+              </label>
+
+              <div className="field">
+                <span>Summe netto</span>
+                <p className="flex min-h-[46px] items-center rounded-xl bg-zinc-50 px-3 font-semibold tabular-nums text-[var(--primary)]">
+                  {formatEuroOptional(total)}
+                </p>
+              </div>
+            </div>
           </li>
         );
       })}
