@@ -25,8 +25,8 @@ export function QuoteTotals({ netCents, compact = false }: QuoteTotalsProps) {
 
   if (compact) {
     return (
-      <div className="text-right">
-        <p className="text-lg font-bold text-[var(--primary)]">
+      <div className="min-w-0 text-left">
+        <p className="text-xl font-bold tabular-nums text-[var(--primary)]">
           {formatEuro(gross)}
         </p>
         <p className="text-xs text-[var(--muted)]">

@@ -120,9 +120,9 @@ export function QuoteCard({ quote, companyName }: QuoteCardProps) {
           </div>
         </div>
 
-        <div className="mt-2 flex items-end justify-between gap-3">
+        <div className="mt-3 flex items-start justify-between gap-3">
           <QuoteTotals netCents={quote.total_cents} compact />
-          <span className="shrink-0 text-xs text-[var(--muted)]">
+          <span className="shrink-0 pt-0.5 text-xs text-[var(--muted)]">
             {formatDateDE(quote.created_at)}
           </span>
         </div>
